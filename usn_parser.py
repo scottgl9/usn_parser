@@ -15,9 +15,6 @@ class CVEParser(HTMLParser):
 
 class CVSSParser(HTMLParser):
     cve=''
-    #def handle_starttag(self, tag, attrs):
-    #    print "Encountered a start tag:", tag
-
     def handle_data(self, data):
         tag = str(self.get_starttag_text())
         if not tag.startswith('<span') or len(data.strip()) == 0:
@@ -33,8 +30,10 @@ if __name__ == '__main__':
         sys.exit(0)
 
     usn_name = sys.argv[1]
-    r = requests.get("https://usn.ubuntu.com/{}/".format(usn_name))
+    if usn_name.startswith('USN-'):
+        usn_name = usn_name.replace('USN-', '')
 
+    r = requests.get("https://usn.ubuntu.com/{}/".format(usn_name))
     cveparser = CVEParser()
     cveparser.feed(r.text)
 
