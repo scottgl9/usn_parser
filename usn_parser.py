@@ -23,6 +23,10 @@ class CVSSParser(HTMLParser):
             cve_sev_list[cve] = data
         elif 'vuln-cvssv3-base-score' in tag:
             cve_score_list[cve] = data
+        elif 'vuln-cvssv2-base-score-severity' in tag and cve not in cve_sev_list:
+            cve_sev_list[cve] = data
+        elif 'vuln-cvssv2-base-score' in tag and cve not in cve_score_list:
+            cve_score_list[cve] = data
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
