@@ -13,11 +13,12 @@ class PackageNameParser(HTMLParser):
         self.tag = tag
 
     def handle_data(self, data):
-        if self.tag == 'dt' and len(data) > 1:
-            self.last_version = str(data)
+        if self.tag == 'dt':
+            if len(data) > 1:
+                self.last_version = str(data)
             return
 
-        if self.last_tag != 'dd' and self.tag != 'a':
+        if self.last_tag != 'dd' or self.tag != 'a':
             return
         if self.ubuntu_version not in self.last_version:
             return
@@ -33,6 +34,8 @@ if __name__ == '__main__':
         print("Usage: {} <usn_list_file> <ubuntu version>".format(sys.argv[0]))
         sys.exit(0)
 
+    print("Getting filtered list of Ubuntu {} packages...".format(sys.argv[2]))
+
     for line in open(sys.argv[1]):
         usn_name = line.strip().replace('USN-', '')
         print(usn_name)
@@ -44,5 +47,6 @@ if __name__ == '__main__':
         pname_parser.last_version = ''
         pname_parser.feed(r.text)
 
+    print("\nPackage list:")
     for name in package_list:
         print(name)
