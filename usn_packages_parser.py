@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 from HTMLParser import HTMLParser
 import requests
@@ -12,23 +13,36 @@ class PackageNameParser(HTMLParser):
         self.tag = tag
 
     def handle_data(self, data):
-        tag = str(self.get_starttag_text())
-        if not tag.startswith('<a') or len(data.strip()) == 0:
+        if self.tag == 'dt' and len(data) > 1:
+            self.last_version = str(data)
             return
-        if 'launchpad.net' in tag and self.last_tag == 'dd' and len(data) > 3:
+
+        if self.last_tag != 'dd' and self.tag != 'a':
+            return
+        if self.ubuntu_version not in self.last_version:
+            return
+
+        tag = str(self.get_starttag_text())
+        if 'launchpad.net' in tag and len(data) > 3:
             if data not in package_list:
-                package_list.append(data)
+                if 'linux-image-' not in data:
+                    package_list.append(data)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: {} <usn_list_file>".format(sys.argv[0]))
+    if len(sys.argv) != 3:
+        print("Usage: {} <usn_list_file> <ubuntu version>".format(sys.argv[0]))
         sys.exit(0)
 
     for line in open(sys.argv[1]):
-        package_list = []
-        r = requests.get("https://usn.ubuntu.com/{}/".format(line.strip()))
+        usn_name = line.strip().replace('USN-', '')
+        print(usn_name)
+        r = requests.get("https://usn.ubuntu.com/{}/".format(usn_name))
         pname_parser = PackageNameParser()
         pname_parser.tag = ''
+        pname_parser.last_tag = ''
+        pname_parser.ubuntu_version = str(sys.argv[2])
+        pname_parser.last_version = ''
         pname_parser.feed(r.text)
-        print(package_list)
 
+    for name in package_list:
+        print(name)
