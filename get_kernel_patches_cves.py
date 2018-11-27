@@ -47,5 +47,14 @@ if __name__ == '__main__':
         r = requests.get("https://people.canonical.com/~ubuntu-security/cve/{}/{}.html".format(cve_year, cve_name))
 
         m = re.search("Fixed by <a href=\"http://git.kernel.org/(\S)+", r.text)
-        line = m.group(0).replace("Fixed by ", "").replace("</td></tr>", "")
-        print("{}: {}".format(cve_name, line))
+        line = m.group(0).replace('Fixed by ', '').replace('</a></td></tr>', '')
+        commit = line[-40:]
+        print("{}: {}".format(cve_name, commit))
+
+        r = requests.get("https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/patch/?id={}".format(commit))
+        if r.status_code != 200:
+            print("Error getting patch for {}".format(cve_name))
+        else:
+            with open(cve_name+".patch", "wb") as f:
+                f.write(r.text.encode('ascii', 'ignore').decode('ascii'))
+
